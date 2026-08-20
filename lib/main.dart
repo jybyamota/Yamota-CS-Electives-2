@@ -1,161 +1,123 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const FruitApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// Router Configuration
+final GoRouter _router = GoRouter(
+  initialLocation: '/',
+  routes: <RouteBase>[
+    GoRoute(
+      path: '/',
+      builder: (BuildContext context, GoRouterState state) {
+        return const FruitListScreen();
+      },
+      // Nested routes defined here
+      routes: <RouteBase>[
+        GoRoute(
+          path: 'fruit/:name', // The URL resolves to /fruit/:name
+          builder: (BuildContext context, GoRouterState state) {
+            final String fruitName = state.pathParameters['name']!;
+            return FruitDetailScreen(fruitName: fruitName);
+          },
+        ),
+      ],
+    ),
+  ],
+);
+
+class FruitApp extends StatelessWidget {
+  const FruitApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const CallScreen(),
+    return MaterialApp.router(
+      title: 'Fruit Router Demo',
+      theme: ThemeData(primarySwatch: Colors.green),
+      routerConfig: _router,
     );
   }
 }
 
-class CallScreen extends StatelessWidget {
-  const CallScreen({super.key});
+// First Page: List of Fruits at "/"
+class FruitListScreen extends StatelessWidget {
+  const FruitListScreen({super.key});
 
-  Widget callOption(IconData icon, String label) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.grey[700], size: 28),
-        const SizedBox(height: 5),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[700],
-            fontSize: 12,
-          ),
-        ),
-      ],
+  final List<String> fruits = const ['Mango', 'Kiwi', 'Peach', 'Pear', 'Grapes'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Fruit List')),
+      body: ListView.builder(
+        itemCount: fruits.length,
+        itemBuilder: (context, index) {
+          final fruit = fruits[index];
+          return ListTile(
+            title: Text(fruit),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // Navigating to the nested route
+              context.go('/fruit/${fruit.toLowerCase()}');
+            },
+          );
+        },
+      ),
     );
+  }
+}
+
+// Second Page: Fruit Illustration at "/fruit/:name"
+class FruitDetailScreen extends StatelessWidget {
+  final String fruitName;
+
+  const FruitDetailScreen({super.key, required this.fruitName});
+
+  // Helper method to provide an "illustration" (emoji) based on the fruit name
+  String _getFruitIllustration(String name) {
+    switch (name.toLowerCase()) {
+      case 'apple':
+        return '🍎';
+      case 'banana':
+        return '🍌';
+      case 'orange':
+        return '🍊';
+      case 'mango':
+        return '🥭';
+      case 'kiwi':
+        return '🥝';
+      case 'peach':
+        return '🍑';
+      case 'pear':
+        return '🍐';
+      case 'grapes':
+        return '🍇';
+      default: return '❓';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-  
-              const Text(
-                "Dialing",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-
-              const SizedBox(height: 35),
-
-              // Profile with circular rings
-              Container(
-                width: 170,
-                height: 170,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.cyan.withOpacity(0.15),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 140,
-                    height: 140,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.cyan.withOpacity(0.25),
-                    ),
-                    child: Center(
-                      child: Container(
-                        width: 110,
-                        height: 110,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.cyan,
-                        ),
-                        child: const Padding( 
-                          padding: EdgeInsets.all(6),
-                          child: CircleAvatar(
-                            backgroundImage: AssetImage("assets/images/image1.jpg"),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              const Text(
-                "Janstin Bieber",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              const Text(
-                "+099-229-6767",
-                style: TextStyle(
-                  fontSize: 22,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 35),
-
-              const Divider(),
-
-              const SizedBox(height: 30),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  callOption(Icons.mic_none, "Mute"),
-                  callOption(Icons.bluetooth, "Bluetooth"),
-                  callOption(Icons.phone_paused, "Hold"),
-                ],
-              ),
-
-              const Spacer(),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(Icons.dialpad, color: Colors.grey[700], size: 30),
-
-                  Container(
-                    width: 75,
-                    height: 75,
-                    decoration: const BoxDecoration(
-                      color: Colors.cyan,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.call,
-                      color: Colors.white,
-                      size: 38,
-                    ),
-                  ),
-
-                  Icon(Icons.volume_up,
-                      color: Colors.grey[700], size: 30),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-            ],
-          ),
+      appBar: AppBar(
+        title: Text(fruitName.toUpperCase()),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _getFruitIllustration(fruitName),
+              style: const TextStyle(fontSize: 120), // Large size for the illustration
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'This is the illustration for $fruitName',
+              style: const TextStyle(fontSize: 18),
+            ),
+          ],
         ),
       ),
     );
