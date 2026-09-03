@@ -10,11 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_application1/main.dart';
 
 void main() {
-  testWidgets('Fruit list displays', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const FruitApp());
+  testWidgets('Shop home displays product collection', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const ShopApp());
 
-    // Verify that the Fruit List title is shown.
-    expect(find.text('Fruit List'), findsOneWidget);
+    expect(find.text('STEAM SHELF'), findsOneWidget);
+    expect(find.text('Stardew Valley'), findsOneWidget);
+    expect(find.text('Sekiro: Shadows Die Twice'), findsOneWidget);
   });
 }
