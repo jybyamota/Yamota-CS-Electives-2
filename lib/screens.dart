@@ -40,7 +40,6 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 14),
                       Text('A hand-picked shelf of memorable PC games for your next session.', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 22),
-                      Text('${products.length} games / player-curated collection', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.primary)),
                     ]),
                   ),
                 ),
