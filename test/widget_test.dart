@@ -1,30 +1,38 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:flutter_application1/main.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:flutter_application1/screens/pokedex_screen.dart';
+import 'package:flutter_application1/services/pokemon_service.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('shows the fetched Pokémon in a grid', (WidgetTester tester) async {
+    final service = PokemonService(
+      client: MockClient((request) async {
+        expect(request.url.queryParameters['limit'], '30');
+        return httpResponse({
+          'results': [
+            {'name': 'bulbasaur', 'url': 'https://pokeapi.co/api/v2/pokemon/1/'},
+            {'name': 'ivysaur', 'url': 'https://pokeapi.co/api/v2/pokemon/2/'},
+          ],
+        });
+      }),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(MaterialApp(home: PokedexScreen(service: service)));
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(GridView), findsOneWidget);
+    expect(find.text('Bulbasaur'), findsOneWidget);
+    expect(find.text('#001'), findsOneWidget);
+    expect(find.text('Ivysaur'), findsOneWidget);
   });
 }
+
+http.Response httpResponse(Map<String, dynamic> body) => http.Response(
+    jsonEncode(body),
+    200,
+    headers: {'content-type': 'application/json'},
+  );
