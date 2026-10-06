@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:provider/provider.dart';
+
+import 'package:flutter_application1/providers/pokemon_provider.dart';
 import 'package:flutter_application1/screens/pokedex_screen.dart';
 import 'package:flutter_application1/services/pokemon_service.dart';
 
@@ -21,7 +24,12 @@ void main() {
       }),
     );
 
-    await tester.pumpWidget(MaterialApp(home: PokedexScreen(service: service)));
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => PokemonProvider(service: service),
+        child: const MaterialApp(home: PokedexScreen()),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(GridView), findsOneWidget);

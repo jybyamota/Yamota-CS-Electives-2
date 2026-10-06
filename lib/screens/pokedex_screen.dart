@@ -1,81 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../models/pokemon.dart';
-import '../services/pokemon_service.dart';
+import '../providers/pokemon_provider.dart';
 import '../widgets/pokemon_card.dart';
+import 'pokemon_detail_screen.dart';
 
 class PokedexScreen extends StatefulWidget {
-	const PokedexScreen({super.key, this.service});
-
-	final PokemonService? service;
+	const PokedexScreen({super.key});
 
 	@override
 	State<PokedexScreen> createState() => _PokedexScreenState();
 }
 
 class _PokedexScreenState extends State<PokedexScreen> {
-	late final PokemonService _service = widget.service ?? PokemonService();
-	late Future<List<Pokemon>> _pokemonFuture;
-
 	@override
 	void initState() {
 		super.initState();
-		_pokemonFuture = _service.fetchPokemon();
-	}
-
-	void _retry() {
-		setState(() {
-			_pokemonFuture = _service.fetchPokemon();
+		WidgetsBinding.instance.addPostFrameCallback((_) {
+			context.read<PokemonProvider>().fetchPokemon();
 		});
 	}
 
 	@override
 	Widget build(BuildContext context) {
-		return Scaffold(
-			appBar: AppBar(title: const Text('Pokédex List')),
-			body: FutureBuilder<List<Pokemon>>(
-				future: _pokemonFuture,
-				builder: (context, snapshot) {
-					if (snapshot.connectionState == ConnectionState.waiting) {
-						return const Center(child: CircularProgressIndicator());
-					}
-
-					if (snapshot.hasError) {
-						return _MessageState(
-							message: 'Could not load Pokémon.',
-							buttonLabel: 'Retry',
-							onPressed: _retry,
-						);
-					}
-
-					final pokemon = snapshot.data ?? const <Pokemon>[];
-					if (pokemon.isEmpty) {
-						return const _MessageState(message: 'No Pokémon found.');
-					}
-
-					return LayoutBuilder(
-						builder: (context, constraints) {
-							final columns = constraints.maxWidth >= 900
-									? 5
-									: constraints.maxWidth >= 600
-											? 3
-											: 2;
-							return GridView.builder(
-								padding: const EdgeInsets.all(12),
-								gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-									crossAxisCount: columns,
-									crossAxisSpacing: 12,
-									mainAxisSpacing: 12,
-									childAspectRatio: 0.82,
-								),
-								itemCount: pokemon.length,
-								itemBuilder: (context, index) =>
-										PokemonCard(pokemon: pokemon[index]),
-							);
-						},
+		return Consumer<PokemonProvider>(
+			builder: (context, provider, child) {
+				return Scaffold(
+					appBar: AppBar(
+						title: const Text('Pokédex List'),
+						actions: [
+							IconButton(
+								onPressed: provider.isLoading ? null : () => provider.fetchPokemon(),
+								icon: const Icon(Icons.refresh),
+								tooltip: 'Refresh',
+							),
+						],
+					),
+					body: provider.isLoading
+						? const Center(child: CircularProgressIndicator())
+						: provider.errorMessage != null
+							? _MessageState(
+									message: provider.errorMessage!,
+									buttonLabel: 'Retry',
+									onPressed: () => provider.fetchPokemon(),
+								)
+							: provider.pokemons.isEmpty
+								? const _MessageState(message: 'No Pokémon found.')
+								: RefreshIndicator(
+										onRefresh: provider.fetchPokemon,
+										child: LayoutBuilder(
+											builder: (context, constraints) {
+												final columns = constraints.maxWidth >= 900
+														? 5
+														: constraints.maxWidth >= 600
+																? 3
+																: 2;
+												return GridView.builder(
+													padding: const EdgeInsets.all(12),
+													gridDelegate:
+														SliverGridDelegateWithFixedCrossAxisCount(
+															crossAxisCount: columns,
+															crossAxisSpacing: 12,
+															mainAxisSpacing: 12,
+															childAspectRatio: 0.82,
+														),
+													itemCount: provider.pokemons.length,
+													itemBuilder: (context, index) {
+														final pokemon = provider.pokemons[index];
+														return PokemonCard(
+															pokemon: pokemon,
+															onTap: () {
+																provider.selectPokemon(pokemon);
+																Navigator.push(
+																	context,
+																	MaterialPageRoute(
+																		builder: (_) =>
+																			const PokemonDetailScreen(),
+																	),
+																);
+															},
+														);
+													},
+												);
+											},
+										),
+									),
 					);
-				},
-			),
+			},
 		);
 	}
 }

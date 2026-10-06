@@ -11,6 +11,9 @@ class Pokemon {
 		return Pokemon(id: id, name: json['name'] as String);
 	}
 
+	String get displayName =>
+		name[0].toUpperCase() + name.substring(1);
+
 	String get imageUrl =>
 			'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
 }
