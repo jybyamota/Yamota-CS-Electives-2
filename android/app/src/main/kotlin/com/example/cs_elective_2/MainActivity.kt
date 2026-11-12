@@ -1,4 +1,4 @@
-package com.example.flutter_application1
+package com.example.cs_elective_2
 
 import io.flutter.embedding.android.FlutterActivity
 
