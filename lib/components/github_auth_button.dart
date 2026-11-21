@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-const githubOAuthRedirectUrl = 'io.supabase.cs_elective_2://login-callback/';
+const githubOAuthRedirectUrl = 'io.supabase.cselective2://login-callback/';
 
 class GitHubAuthButton extends StatefulWidget {
   const GitHubAuthButton({super.key, this.showLabel = false});

@@ -29,7 +29,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data
-                    android:scheme="io.supabase.cs_elective_2"
+                    android:scheme="io.supabase.cselective2"
                     android:host="login-callback"/>
             </intent-filter>
         </activity>

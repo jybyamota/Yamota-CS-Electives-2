@@ -30,7 +30,7 @@ Supabase Auth. To enable it:
    the GitHub OAuth app's client ID and client secret.
 2. Set the GitHub OAuth app's callback URL to
    `https://<project-ref>.supabase.co/auth/v1/callback`.
-3. Add `io.supabase.cs_elective_2://login-callback/` to the Supabase project's
+3. Add `io.supabase.cselective2://login-callback/` to the Supabase project's
    **Authentication > URL Configuration > Redirect URLs**. For local Flutter
    web development, also allow the local app origin (for example,
    `http://localhost:3000/**`; use the port shown by `flutter run -d chrome`).

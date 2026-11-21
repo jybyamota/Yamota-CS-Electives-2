@@ -29,7 +29,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>io.supabase.cs_elective_2</string>
+				<string>io.supabase.cselective2</string>
 			</array>
 		</dict>
 	</array>

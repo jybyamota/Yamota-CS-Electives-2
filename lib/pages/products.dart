@@ -1,10 +1,14 @@
 import 'package:cs_elective_2/models/product.dart';
 import 'package:cs_elective_2/models/product_filter.dart';
 import 'package:cs_elective_2/pages/add_product.dart';
+import 'package:cs_elective_2/pages/cart_screen.dart';
+import 'package:cs_elective_2/pages/orders_page.dart';
 import 'package:cs_elective_2/components/github_auth_button.dart';
 import 'package:cs_elective_2/providers/category_provider.dart';
 import 'package:cs_elective_2/providers/product_filter_provider.dart';
 import 'package:cs_elective_2/providers/product_provider.dart';
+import 'package:cs_elective_2/providers/role_provider.dart';
+import 'package:cs_elective_2/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -67,6 +71,12 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
     final productsAsync = ref.watch(productProvider);
     final filter = ref.watch(productFilterProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    final isAdmin = ref.watch(isAdminProvider).value ?? false;
+    final cartCount = ref.watch(
+      cartProvider.select(
+        (items) => items.fold<int>(0, (sum, item) => sum + item.quantity),
+      ),
+    );
 
     final currentRange =
         _currentPriceRange ?? RangeValues(filter.minPrice, filter.maxPrice);
@@ -76,6 +86,14 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
         title: const Text('Products'),
         actions: [
           const GitHubAuthButton(),
+          IconButton(
+            tooltip: 'Orders',
+            icon: const Icon(Icons.receipt_long),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const OrdersPage()),
+            ),
+          ),
           IconButton(
             tooltip: _showFilterPanel ? 'Hide Filters' : 'Show Filters',
             icon: Icon(
@@ -87,16 +105,51 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
               });
             },
           ),
-          IconButton(icon: const Icon(Icons.shopping_bag), onPressed: () {}),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                tooltip: 'Cart',
+                icon: const Icon(Icons.shopping_bag),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CartScreen()),
+                ),
+              ),
+              if (cartCount > 0)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$cartCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AddProductPage()),
-        ),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
+              tooltip: 'Add product',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddProductPage()),
+              ),
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: Column(
         children: [
           // Filter Panel: Price Slider & Category Filter
@@ -381,34 +434,38 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                                   Positioned(
                                     top: 4,
                                     right: 4,
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 18,
-                                          backgroundColor: Colors.white70,
-                                          child: IconButton(
-                                            padding: EdgeInsets.zero,
-                                            iconSize: 20,
-                                            icon: const Icon(Icons.edit),
-                                            onPressed: () => editProduct(p),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        CircleAvatar(
-                                          radius: 18,
-                                          backgroundColor: Colors.white70,
-                                          child: IconButton(
-                                            padding: EdgeInsets.zero,
-                                            iconSize: 20,
-                                            icon: const Icon(
-                                              Icons.delete,
-                                              color: Colors.redAccent,
-                                            ),
-                                            onPressed: () => confirmDelete(p),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    child: isAdmin
+                                        ? Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 18,
+                                                backgroundColor: Colors.white70,
+                                                child: IconButton(
+                                                  padding: EdgeInsets.zero,
+                                                  iconSize: 20,
+                                                  icon: const Icon(Icons.edit),
+                                                  onPressed: () =>
+                                                      editProduct(p),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              CircleAvatar(
+                                                radius: 18,
+                                                backgroundColor: Colors.white70,
+                                                child: IconButton(
+                                                  padding: EdgeInsets.zero,
+                                                  iconSize: 20,
+                                                  icon: const Icon(
+                                                    Icons.delete,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed: () =>
+                                                      confirmDelete(p),
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        : const SizedBox.shrink(),
                                   ),
                                 ],
                               ),
@@ -445,6 +502,27 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                  const SizedBox(height: 6),
+                                  FilledButton.icon(
+                                    onPressed: p.stock > 0
+                                        ? () {
+                                            ref
+                                                .read(cartProvider.notifier)
+                                                .add(p);
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  '${p.name} added to cart',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        : null,
+                                    icon: const Icon(Icons.add_shopping_cart),
+                                    label: const Text('Add to cart'),
+                                  ),
                                 ],
                               ),
                             ),
